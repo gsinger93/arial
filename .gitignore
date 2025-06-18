@@ -9,3 +9,8 @@ __pycache__/
 
 # VS Code
 .vscode/
+
+# GCP secret key
+gs-arial-118d3ed02406.json
+.env
+CA-Bundle-ZTNA.pem
