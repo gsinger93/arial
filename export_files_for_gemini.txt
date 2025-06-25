@@ -1,0 +1,22 @@
+$outputFile = "code_context.txt"
+$exclude = @(".git", "__pycache__", ".venv", "*.env", $outputFile)
+
+$header = @"
+Project: $(Split-Path -Leaf -Path (Get-Location))
+Exported at: $(Get-Date)
+
+--- FILE LIST ---
+"@
+$files = Get-ChildItem -Recurse -File -Exclude $exclude | ForEach-Object { $_.FullName.Substring($PWD.Path.Length + 1) } | Sort-Object
+$contentHeader = @"
+
+--- FILE CONTENT ---
+"@
+
+$fileContents = Get-ChildItem -Recurse -File -Exclude $exclude | Sort-Object | ForEach-Object {
+    "--- START FILE: $($_.FullName.Substring($PWD.Path.Length + 1)) ---"
+    Get-Content -Raw $_.FullName
+    "--- END FILE: $($_.FullName.Substring($PWD.Path.Length + 1)) ---`n"
+}
+
+($header + ($files -join "`r`n") + $contentHeader + ($fileContents -join "`r`n")) | Set-Content -Path $outputFile -Encoding UTF8
