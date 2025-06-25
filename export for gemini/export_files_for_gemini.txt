@@ -3,7 +3,7 @@
 # --- CONFIGURATION ---
 # You can easily edit these lists to add more exclusions if you need to.
 
-$outputFile = "code_context.txt"
+$outputFile = "export for gemini/code_context.txt"
 $maxFileSizeMB = 2  # <-- Lowered to 2MB. A critical change!
 
 # 1. Directories to completely ignore (and anything inside them)
