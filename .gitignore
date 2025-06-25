@@ -11,6 +11,12 @@ __pycache__/
 .vscode/
 
 # GCP secret key
-gs-arial-118d3ed02406.json
+gcp-data-ingestion.json
+dbt-service-account.json
 .env
 CA-Bundle-ZTNA.pem
+
+# dbt generated files
+dbt/target/
+dbt/dbt_packages/
+dbt/logs/
