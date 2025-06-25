@@ -1,10 +1,11 @@
+# --- Run this in terminal from main project directory
 # --- The Final, Highly-Selective Script ---
 
 # --- CONFIGURATION ---
 # You can easily edit these lists to add more exclusions if you need to.
 
 $outputFile = "export for gemini/code_context.txt"
-$maxFileSizeMB = 2  # <-- Lowered to 2MB. A critical change!
+$maxFileSizeMB = 10  # <-- MB limit of file. Reduce if overall file gets too big
 
 # 1. Directories to completely ignore (and anything inside them)
 $excludeDirs = @(
