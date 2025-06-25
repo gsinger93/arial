@@ -1,22 +1,96 @@
+# --- The Final, Highly-Selective Script ---
+
+# --- CONFIGURATION ---
+# You can easily edit these lists to add more exclusions if you need to.
+
 $outputFile = "code_context.txt"
-$exclude = @(".git", "__pycache__", ".venv", "*.env", $outputFile)
+$maxFileSizeMB = 2  # <-- Lowered to 2MB. A critical change!
 
-$header = @"
-Project: $(Split-Path -Leaf -Path (Get-Location))
-Exported at: $(Get-Date)
+# 1. Directories to completely ignore (and anything inside them)
+$excludeDirs = @(
+    "*.git*",
+    "*.venv*",
+    "*__pycache__*",
+    "*node_modules*",
+    "*dist*",
+    "*build*",
+    "*target*",
+    "*.vscode*",
+    "*.idea*",
+    "*data*",
+    "*dataset*",
+    "*assets*",
+    "*images*"
+)
 
---- FILE LIST ---
-"@
-$files = Get-ChildItem -Recurse -File -Exclude $exclude | ForEach-Object { $_.FullName.Substring($PWD.Path.Length + 1) } | Sort-Object
-$contentHeader = @"
+# 2. Specific file names to ignore
+$excludeFiles = @(
+    "*.lock",
+    "*.env",
+    $outputFile
+)
 
---- FILE CONTENT ---
-"@
+# 3. File extensions to ignore (add any other large file types you found)
+$excludeExtensions = @(
+    ".png", ".jpg", ".jpeg", ".gif", ".svg", ".ico", ".webp", # Images
+    ".mp4", ".mov", ".avi", ".wmv",                          # Videos
+    ".mp3", ".wav", ".ogg",                                  # Audio
+    ".zip", ".tar", ".gz", ".rar", ".7z",                     # Archives
+    ".pdf", ".doc", ".docx", ".xls", ".xlsx", ".ppt", ".pptx",# Documents
+    ".db", ".sqlite", ".sqlite3",                            # Databases
+    ".exe", ".dll", ".so", ".jar", ".class",                 # Binaries
+    ".log",                                                 # Logs
+    ".csv", ".json", ".parquet", ".xml"                      # Common data formats
+)
+# --- END CONFIGURATION ---
 
-$fileContents = Get-ChildItem -Recurse -File -Exclude $exclude | Sort-Object | ForEach-Object {
-    "--- START FILE: $($_.FullName.Substring($PWD.Path.Length + 1)) ---"
-    Get-Content -Raw $_.FullName
-    "--- END FILE: $($_.FullName.Substring($PWD.Path.Length + 1)) ---`n"
+
+# --- SCRIPT LOGIC (No need to edit below here) ---
+$stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
+Write-Host "🚀 Starting file export..."
+Write-Host "- Max file size: $($maxFileSizeMB)MB"
+Write-Host "- Ignoring $($excludeDirs.Count) directory patterns, $($excludeFiles.Count) filenames, and $($excludeExtensions.Count) extensions."
+
+$stringBuilder = New-Object System.Text.StringBuilder
+$stringBuilder.AppendLine("--- START PROJECT: $(Split-Path -Leaf -Path (Get-Location)) ---`n") | Out-Null
+
+$skippedFiles = @()
+$processedCount = 0
+
+# Get all files and apply filters
+$files = Get-ChildItem -Recurse -File -ErrorAction SilentlyContinue | Where-Object {
+    $path = $_.FullName
+    $name = $_.Name
+    $ext = $_.Extension
+
+    # Exclusion logic
+    if ($ext -in $excludeExtensions) { return $false }
+    if ($name -in $excludeFiles) { return $false }
+    foreach ($dirPattern in $excludeDirs) { if ($path -like $dirPattern) { return $false } }
+
+    return $true # If none of the above, keep the file
 }
 
-($header + ($files -join "`r`n") + $contentHeader + ($fileContents -join "`r`n")) | Set-Content -Path $outputFile -Encoding UTF8
+foreach ($file in $files) {
+    if ($file.Length / 1MB -gt $maxFileSizeMB) {
+        $skippedFiles += $file.FullName.Substring($PWD.Path.Length + 1)
+        continue
+    }
+    
+    $relativePath = $file.FullName.Substring($PWD.Path.Length + 1)
+    $stringBuilder.AppendLine("--- START FILE: $relativePath ---") | Out-Null
+    $content = [System.IO.File]::ReadAllText($file.FullName)
+    $stringBuilder.AppendLine($content) | Out-Null
+    $stringBuilder.AppendLine("--- END FILE: $relativePath ---`n") | Out-Null
+    $processedCount++
+}
+
+[System.IO.File]::WriteAllText((Join-Path $PWD.Path $outputFile), $stringBuilder.ToString())
+$stopwatch.Stop()
+
+Write-Host "✅ Success! Export finished in $($stopwatch.Elapsed.Seconds) seconds."
+Write-Host "- Created '$outputFile' with content from $processedCount files."
+if ($skippedFiles.Count -gt 0) {
+    Write-Host "⚠️ Skipped $($skippedFiles.Count) files because they were larger than $($maxFileSizeMB)MB."
+    Write-Host "   (If any of these are important, consider increasing `$maxFileSizeMB` or splitting them.)"
+}
