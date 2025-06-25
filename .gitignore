@@ -10,11 +10,10 @@ __pycache__/
 # VS Code
 .vscode/
 
-# GCP secret key
-gcp-data-ingestion.json
-dbt-service-account.json
+# secrets & keys
+service accounts/
 .env
-CA-Bundle-ZTNA.pem
+security/
 
 # dbt generated files
 dbt/target/
