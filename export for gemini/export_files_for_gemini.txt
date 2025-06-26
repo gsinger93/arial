@@ -5,7 +5,7 @@
 # You can easily edit these lists to add more exclusions if you need to.
 
 $outputFile = "export for gemini/code_context.txt"
-$maxFileSizeMB = 10  # <-- MB limit of file. Reduce if overall file gets too big
+$maxFileSizeMB = 1000  # <-- MB limit of file. Reduce if overall file gets too big
 
 # 1. Directories to completely ignore (and anything inside them)
 $excludeDirs = @(
