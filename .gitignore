@@ -22,3 +22,6 @@ dbt/logs/
 
 #Code context file
 code_context.txt
+
+# Arial backlog
+Arial Backlog.csv
