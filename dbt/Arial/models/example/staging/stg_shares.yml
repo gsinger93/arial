@@ -1,0 +1,51 @@
+version: 2
+
+models:
+  - name: stg_shares
+    description: "Staging model for daily share prices. Cleansed and standardized from raw source."
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns:
+            - share_date
+            - symbol
+
+    columns:
+      - name: share_date
+        description: "The date of the trading day."
+        tests:
+          - not_null
+
+      - name: open_price
+        description: "The price at the start of the trading day."
+        tests:
+          - not_null
+          - is_not_negative
+
+      - name: high_price
+        description: "The highest price during the trading day."
+        tests:
+          - not_null
+          - is_not_negative
+
+      - name: low_price
+        description: "The lowest price during the trading day."
+        tests:
+          - not_null
+          - is_not_negative
+
+      - name: close_price
+        description: "The price at the end of the trading day."
+        tests:
+          - not_null
+          - is_not_negative
+
+      - name: trading_volume
+        description: "The number of shares traded during the day."
+        tests:
+          - not_null
+          - is_not_negative
+
+      - name: symbol
+        description: "The stock ticker symbol."
+        tests:
+          - not_null
