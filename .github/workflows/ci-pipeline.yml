@@ -60,7 +60,7 @@ jobs:
       # ... other steps before
 
       - name: List Root Directory Contents
-        run: ls -l dbt
+        run: find .
 
       # ... rest of the steps
 
