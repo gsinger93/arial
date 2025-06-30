@@ -63,6 +63,10 @@ jobs:
         # This takes the secret you stored in ARIAL-6 and writes it to a file
         # The profiles.yml from Step 2 is configured to look for this exact file
 
+      - name: Verify Credentials File
+        run: ls -l
+        working-directory: dbt/Arial
+
       # Step 6: Install dbt packages
       - name: Install dbt packages
         run: dbt deps
