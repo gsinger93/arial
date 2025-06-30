@@ -57,7 +57,19 @@ jobs:
           # stop the build if there are Python syntax errors or undefined names
           flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
 
+      # ... other steps before
+
+      - name: List Root Directory Contents
+        run: ls -l
+
       # Step 5: Create the GCP credentials file from the GitHub Secret
+      - name: Configure GCP Credentials
+        env:
+          GCP_CREDENTIALS_JSON: ${{ secrets.GCP_SA_KEY }}
+        run: printf '%s' "$GCP_CREDENTIALS_JSON" > dbt/Arial/gcp-credentials.json
+
+      # ... rest of the steps
+
       - name: Configure GCP Credentials
         env:
           # Assign the secret to an environment variable for this step
