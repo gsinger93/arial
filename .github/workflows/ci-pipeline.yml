@@ -59,7 +59,7 @@ jobs:
 
       # Step 5: Create the GCP credentials file from the GitHub Secret
       - name: Configure GCP Credentials
-        run: echo "${{ secrets.GCP_CREDENTIALS }}" > dbt/Arial/gcp-credentials.json
+        run: echo "${{ secrets.GCP_SA_KEY }}" > dbt/Arial/gcp-credentials.json
 
       # Step 6: Install dbt packages
       - name: Install dbt packages
