@@ -57,12 +57,6 @@ jobs:
           # stop the build if there are Python syntax errors or undefined names
           flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
 
-      # ... other steps before
-
-      - name: List Root Directory Contents
-        run: find .
-
-      # ... rest of the steps
       # Step 5: Create the GCP credentials file from the GitHub Secret
       - name: Configure GCP Credentials
         env:
@@ -74,7 +68,7 @@ jobs:
         run: dbt deps
         working-directory: dbt/Arial
 
-      # Step 7: Run the dbt tests you created in ARIAL-17
+      # Step 7: Run the dbt tests
       - name: Run dbt tests
         run: dbt test
         working-directory: dbt/Arial
