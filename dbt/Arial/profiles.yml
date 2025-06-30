@@ -1,6 +1,6 @@
 # profiles.yml
 
-default:
+Arial:
   target: dev
   outputs:
     dev:
