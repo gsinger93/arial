@@ -66,9 +66,9 @@ jobs:
       # Step 6: Install dbt packages
       - name: Install dbt packages
         run: dbt deps
-        working-directory: C:\Users\George.Singer\Documents\GitHub\Arial\dbt
+        working-directory: dbt
 
       # Step 7: Run the dbt tests you created in ARIAL-17
       - name: Run dbt tests
         run: dbt test
-        working-directory: C:\Users\George.Singer\Documents\GitHub\Arial\dbt
+        working-directory: dbt
