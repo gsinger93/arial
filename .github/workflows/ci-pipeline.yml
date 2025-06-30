@@ -59,9 +59,7 @@ jobs:
 
       # Step 5: Create the GCP credentials file from the GitHub Secret
       - name: Configure GCP Credentials
-        run: echo "${{ secrets.GCP_CREDENTIALS }}" > gcp-credentials.json
-        # This takes the secret you stored in ARIAL-6 and writes it to a file
-        # The profiles.yml from Step 2 is configured to look for this exact file
+        run: echo "${{ secrets.GCP_CREDENTIALS }}" > dbt/Arial/gcp-credentials.json
 
       - name: Verify Credentials File
         run: ls -l
