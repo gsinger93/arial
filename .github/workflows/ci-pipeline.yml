@@ -54,7 +54,9 @@ jobs:
       # Step 6: Install dbt packages
       - name: Install dbt packages
         run: dbt deps
+        working-directory: ./dbt/Arial
 
       # Step 7: Run the dbt tests you created in ARIAL-17
       - name: Run dbt tests
-        run: dbt test # This command executes all the tests in your dbt project
+        run: dbt deps
+        working-directory: ./dbt/Arial
