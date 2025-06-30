@@ -61,13 +61,9 @@ jobs:
       - name: Configure GCP Credentials
         run: echo "${{ secrets.GCP_CREDENTIALS }}" > dbt/Arial/gcp-credentials.json
 
-      - name: Verify Credentials File
-        run: ls -l
-        working-directory: dbt/Arial
-
       # Step 6: Install dbt packages
       - name: Install dbt packages
-        run: cat gcp-credentials.json
+        run: dbt deps
         working-directory: dbt/Arial
 
       # Step 7: Run the dbt tests you created in ARIAL-17
