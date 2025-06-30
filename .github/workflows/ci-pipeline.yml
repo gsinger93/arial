@@ -58,5 +58,5 @@ jobs:
 
       # Step 7: Run the dbt tests you created in ARIAL-17
       - name: Run dbt tests
-        run: dbt deps
+        run: dbt test
         working-directory: ./dbt/Arial
