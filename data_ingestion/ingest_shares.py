@@ -6,6 +6,7 @@ from alpha_vantage.timeseries import TimeSeries
 from google.cloud import bigquery
 from google.api_core import exceptions
 from google.oauth2 import service_account
+from datetime import datetime, timezone # --- ADDED --- Import datetime for timestamps
 
 # This line is crucial for local development. It looks for a .env file in your
 # project root and loads the variables from it into the environment.
@@ -52,18 +53,30 @@ def main():
     try:
         logging.info("Connecting to Alpha Vantage to fetch daily share data...")
         ts = TimeSeries(key=ALPHA_VANTAGE_API_KEY, output_format='pandas')
+        # We fetch 'full' to ensure we get the latest data even if the API hasn't updated 'compact'
         data, meta_data = ts.get_daily(symbol=STOCK_SYMBOL_TO_FETCH, outputsize='full')
-        logging.info(f"Successfully fetched {len(data)} data points.")
+        logging.info(f"Successfully fetched {len(data)} total data points from API.")
 
+        # --- ADDED --- Isolate only the most recent day's data to prevent duplicates
+        latest_data = data[data.index == data.index.max()].copy()
+        if latest_data.empty:
+            logging.warning("No new data found to load. Exiting.")
+            return
+        
+        logging.info(f"Isolated latest data for date: {latest_data.index.max().date()}")
+        
+        # --- ADDED --- Add the ingestion timestamp column using a timezone-aware UTC timestamp
+        latest_data['ingest_dateTime'] = datetime.now(timezone.utc)
+        
         # Prepare DataFrame for BigQuery
-        data['symbol'] = STOCK_SYMBOL_TO_FETCH
-        data.reset_index(inplace=True)
-        data.rename(columns={'date': 'price_date',
-                               '1. open': 'open',
-                               '2. high': 'high',
-                               '3. low': 'low',
-                               '4. close': 'close',
-                               '5. volume': 'volume'}, inplace=True)
+        latest_data['symbol'] = STOCK_SYMBOL_TO_FETCH
+        latest_data.reset_index(inplace=True)
+        latest_data.rename(columns={'date': 'price_date',
+                                '1. open': 'open',
+                                '2. high': 'high',
+                                '3. low': 'low',
+                                '4. close': 'close',
+                                '5. volume': 'volume'}, inplace=True)
         logging.info("Data prepared for loading.")
 
     except Exception as e:
@@ -75,7 +88,6 @@ def main():
         logging.info("Authenticating with Google Cloud using explicit credentials...")
 
         # This block explicitly loads credentials from the file path in your .env file.
-        # This guarantees we are using the service account and not any other default credentials.
         credentials = service_account.Credentials.from_service_account_file(GOOGLE_APPLICATION_CREDENTIALS_PATH)
         bigquery_client = bigquery.Client(project=GCP_PROJECT_ID, credentials=credentials)
         
@@ -84,11 +96,23 @@ def main():
 
         # Configure the load job.
         job_config = bigquery.LoadJobConfig(
-            write_disposition="WRITE_TRUNCATE",
-            autodetect=True,
+            # --- CHANGED --- Set to APPEND to add new rows instead of overwriting the table
+            write_disposition="WRITE_APPEND",
+            # We define the schema explicitly now that we have a datetime column
+            schema=[
+                bigquery.SchemaField("price_date", "DATE"),
+                bigquery.SchemaField("open", "FLOAT64"),
+                bigquery.SchemaField("high", "FLOAT64"),
+                bigquery.SchemaField("low", "FLOAT64"),
+                bigquery.SchemaField("close", "FLOAT64"),
+                bigquery.SchemaField("volume", "INT64"),
+                bigquery.SchemaField("symbol", "STRING"),
+                bigquery.SchemaField("ingest_dateTime", "TIMESTAMP"),
+            ],
         )
 
-        job = bigquery_client.load_table_from_dataframe(data, table_ref, job_config=job_config)
+        # --- CHANGED --- Load the 'latest_data' DataFrame, not the full 'data'
+        job = bigquery_client.load_table_from_dataframe(latest_data, table_ref, job_config=job_config)
         job.result()  # Wait for the job to complete.
 
         logging.info(f"Success! Loaded {job.output_rows} rows into {table_ref}.")
