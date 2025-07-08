@@ -38,7 +38,7 @@ jobs:
       - name: Authenticate to Google Cloud
         uses: 'google-github-actions/auth@v2'
         with:
-          credentials_json: '${{ secrets.GCP_CREDENTIALS }}' # Ensure your secret is named GCP_CREDENTIALS
+          credentials_json: '${{ secrets.GCP_SA_KEY }}' # Ensure your secret is named GCP_CREDENTIALS
 
       # Step 5: Run the ingestion script with all necessary environment variables
       - name: Run Python ingestion script
