@@ -50,4 +50,4 @@ jobs:
           ALPHA_VANTAGE_API_KEY: ${{ secrets.ALPHA_VANTAGE_API_KEY }} # IMPORTANT: Make sure your secret is named ALPHA_VANTAGE_API_KEY
           # If you completed ARIAL-14, you would add your CA bundle secret here too
           # REQUESTS_CA_BUNDLE: ${{ secrets.CORP_CA_BUNDLE }}
-        run: python ingest_shares.py # IMPORTANT: Replace with the actual name of your script, e.g., ingest_shares.py
+        run: python data_ingestion/ingest_shares.py # IMPORTANT: Replace with the actual name of your script, e.g., ingest_shares.py
