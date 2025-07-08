@@ -47,7 +47,12 @@ jobs:
       - name: Run Python ingestion script
         env:
           # This makes your API key available to your script
-          ALPHA_VANTAGE_API_KEY: ${{ secrets.ALPHA_VANTAGE_API_KEY }} # IMPORTANT: Make sure your secret is named ALPHA_VANTAGE_API_KEY
+          # --- ADDED --- Provide all necessary environment variables
+          GCP_PROJECT_ID: "gs-arial"
+          BIGQUERY_DATASET_ID: "financial_data_landing"
+          BIGQUERY_TABLE_ID: "stock_values"
+          STOCK_SYMBOL_TO_FETCH: "IBM" # This was using the default, let's be explicit
+          ALPHA_VANTAGE_API_KEY: ${{ secrets.ALPHA_VANTAGE_API_KEY }}# IMPORTANT: Make sure your secret is named ALPHA_VANTAGE_API_KEY
           # If you completed ARIAL-14, you would add your CA bundle secret here too
           # REQUESTS_CA_BUNDLE: ${{ secrets.CORP_CA_BUNDLE }}
         run: python data_ingestion/ingest_shares.py # IMPORTANT: Replace with the actual name of your script, e.g., ingest_shares.py
