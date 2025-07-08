@@ -1,0 +1,53 @@
+# Name of the workflow, which will appear in the GitHub Actions tab
+name: Scheduled Daily Data Ingestion
+
+# This section defines the trigger for the workflow
+on:
+  # This allows you to run the workflow manually from the Actions tab for testing
+  workflow_dispatch:
+
+  # This is the schedule trigger
+  schedule:
+    # This is a CRON expression that means 'run at 7:00 AM UTC every day'
+    # For the UK, this is 7am in winter (GMT) and 8am in summer (BST)
+    - cron: '0 7 * * *'
+
+# This section defines the jobs to be run
+jobs:
+  # We only have one job, which we'll call 'ingest-daily-data'
+  ingest-daily-data:
+    # The type of virtual machine to run the job on. 'ubuntu-latest' is a reliable default.
+    runs-on: ubuntu-latest
+    
+    # The sequence of steps the job will perform
+    steps:
+      # Step 1: Checks out your repository's code onto the runner
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Step 2: Sets up the Python environment
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10' # You can change this to your desired Python version
+
+      # Step 3: Installs the Python packages listed in your requirements.txt file
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      # Step 4: Authenticates with Google Cloud
+      # This uses the GCP Service Account JSON you stored in GitHub Secrets (ARIAL-6)
+      - name: Authenticate to Google Cloud
+        uses: 'google-github-actions/auth@v2'
+        with:
+          credentials_json: '${{ secrets.GCP_SA_KEY }}' # IMPORTANT: Make sure your secret is named GCP_CREDENTIALS
+
+      # Step 5: Run the ingestion script
+      # This executes your Python script. We pass the Alpha Vantage API key as an environment variable.
+      - name: Run Python ingestion script
+        env:
+          # This makes your API key available to your script
+          ALPHA_VANTAGE_API_KEY: ${{ secrets.ALPHA_VANTAGE_API_KEY }} # IMPORTANT: Make sure your secret is named ALPHA_VANTAGE_API_KEY
+          # If you completed ARIAL-14, you would add your CA bundle secret here too
+          # REQUESTS_CA_BUNDLE: ${{ secrets.CORP_CA_BUNDLE }}
+        run: python your_ingestion_scripingest_shares.py # IMPORTANT: Replace with the actual name of your script, e.g., ingest_shares.py
