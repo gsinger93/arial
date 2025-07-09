@@ -1,4 +1,4 @@
-**PR Title:** [ARIAL-XXX] A brief, descriptive title
+**PR Title: [ARIAL-XXX]**
 
 ### Summary
 
@@ -38,7 +38,7 @@
 -   [ ] `dbt test` passes locally for all relevant models.
 -   [ ] Data has been manually validated against the source or expected outcomes.
 -   [ ] Downstream dependencies (if any) have been considered.
-
+-   [ ] These tests are not relevant
 ---
 
 ### Documentation
