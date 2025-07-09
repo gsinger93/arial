@@ -40,7 +40,7 @@ jobs:
 
       - name: Configure GCP Credentials
         env:
-          GCP_CREDENTIALS_JSON: ${{ secrets.GCP_SA_KEY }}
+          GCP_CREDENTIALS_JSON: ${{ secrets.DBT_SA_KEY }}
         run: printf '%s' "$GCP_CREDENTIALS_JSON" > dbt/Arial/gcp-credentials.json
 
       - name: Install dbt packages
