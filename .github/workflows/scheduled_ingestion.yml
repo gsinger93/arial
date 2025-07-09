@@ -1,4 +1,4 @@
-# Name of the workflow, which will appear in the GitHub Actions tab
+  # Name of the workflow, which will appear in the GitHub Actions tab
 name: Scheduled Daily Data Ingestion
 
 # This section defines the trigger for the workflow
@@ -9,7 +9,6 @@ on:
   # This is the schedule trigger
   schedule:
     # This is a CRON expression that means 'run at 7:00 AM UTC every day'
-    # For the UK, this is 7am in winter (GMT) and 8am in summer (BST)
     - cron: '0 7 * * *'
 
 # This section defines the jobs to be run
@@ -29,25 +28,24 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.10' # You can change this to your desired Python version
+          python-version: '3.10'
 
       # Step 3: Installs the Python packages listed in your requirements.txt file
       - name: Install dependencies
         run: pip install -r requirements.txt
 
-      # Step 4: Authenticates with Google Cloud
-      # This uses the GCP Service Account JSON you stored in GitHub Secrets (ARIAL-6)
+      # Step 4: Authenticates with Google Cloud using a secret
       - name: Authenticate to Google Cloud
         uses: 'google-github-actions/auth@v2'
         with:
-          credentials_json: '${{ secrets.GCP_SA_KEY }}' # IMPORTANT: Make sure your secret is named GCP_CREDENTIALS
+          credentials_json: '${{ secrets.GCP_SA_KEY }}' # Ensure your secret is named GCP_CREDENTIALS
 
-      # Step 5: Run the ingestion script
-      # This executes your Python script. We pass the Alpha Vantage API key as an environment variable.
+      # Step 5: Run the ingestion script with all necessary environment variables
       - name: Run Python ingestion script
         env:
-          # This makes your API key available to your script
-          ALPHA_VANTAGE_API_KEY: ${{ secrets.ALPHA_VANTAGE_API_KEY }} # IMPORTANT: Make sure your secret is named ALPHA_VANTAGE_API_KEY
-          # If you completed ARIAL-14, you would add your CA bundle secret here too
-          # REQUESTS_CA_BUNDLE: ${{ secrets.CORP_CA_BUNDLE }}
-        run: python ingest_shares.py # IMPORTANT: Replace with the actual name of your script, e.g., ingest_shares.py
+          GCP_PROJECT_ID: "gs-arial"
+          BIGQUERY_DATASET_ID: "financial_data_landing"
+          BIGQUERY_TABLE_ID: "stock_values"
+          STOCK_SYMBOL_TO_FETCH: "IBM"
+          ALPHA_VANTAGE_API_KEY: ${{ secrets.ALPHA_VANTAGE_API_KEY }}
+        run: python data_ingestion/ingest_shares.py

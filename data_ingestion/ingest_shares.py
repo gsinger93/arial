@@ -57,21 +57,13 @@ def main():
         data, meta_data = ts.get_daily(symbol=STOCK_SYMBOL_TO_FETCH, outputsize='full')
         logging.info(f"Successfully fetched {len(data)} total data points from API.")
 
-        # --- ADDED --- Isolate only the most recent day's data to prevent duplicates
-        latest_data = data[data.index == data.index.max()].copy()
-        if latest_data.empty:
-            logging.warning("No new data found to load. Exiting.")
-            return
-        
-        logging.info(f"Isolated latest data for date: {latest_data.index.max().date()}")
-        
         # --- ADDED --- Add the ingestion timestamp column using a timezone-aware UTC timestamp
-        latest_data['ingest_dateTime'] = datetime.now(timezone.utc)
+        data['ingest_dateTime'] = datetime.now(timezone.utc)
         
         # Prepare DataFrame for BigQuery
-        latest_data['symbol'] = STOCK_SYMBOL_TO_FETCH
-        latest_data.reset_index(inplace=True)
-        latest_data.rename(columns={'date': 'price_date',
+        data['symbol'] = STOCK_SYMBOL_TO_FETCH
+        data.reset_index(inplace=True)
+        data.rename(columns={'date': 'price_date',
                                 '1. open': 'open',
                                 '2. high': 'high',
                                 '3. low': 'low',
@@ -111,8 +103,8 @@ def main():
             ],
         )
 
-        # --- CHANGED --- Load the 'latest_data' DataFrame, not the full 'data'
-        job = bigquery_client.load_table_from_dataframe(latest_data, table_ref, job_config=job_config)
+        # --- CHANGED --- Load the 'data' DataFrame
+        job = bigquery_client.load_table_from_dataframe(data, table_ref, job_config=job_config)
         job.result()  # Wait for the job to complete.
 
         logging.info(f"Success! Loaded {job.output_rows} rows into {table_ref}.")
