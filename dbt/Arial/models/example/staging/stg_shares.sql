@@ -11,21 +11,17 @@ WITH source AS (
 renamed AS (
 
     SELECT
-        -- Let's cast the timestamp to a proper DATE data type
         CAST(price_date AS DATE) AS share_date,
-
-        -- Rename the columns to be more user-friendly and select only what we need
         open AS open_price,
         high AS high_price,
         low AS low_price,
         close AS close_price,
         volume AS trading_volume,
-
-        -- It's good practice to also include the symbol if you have it
         symbol
-
     FROM source
-
+    WHERE symbol IS NOT NULL
+    qualify row_number() over (partition by price_date, symbol order by ingest_dateTime desc) =1
+    -- This line ensures we only keep the most recent record for each symbol on each date.
 )
 
 SELECT * FROM renamed
