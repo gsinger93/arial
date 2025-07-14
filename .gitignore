@@ -20,8 +20,9 @@ dbt/target/
 dbt/dbt_packages/
 dbt/logs/
 
-#Code context file
+#Export for gemini files
 code_context.txt
+FMP API.docx
 
 # Arial backlog
 Arial Backlog.csv
