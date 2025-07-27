@@ -2,8 +2,5 @@
 
 pandas
 python-dotenv
-google-cloud-bigquery
 requests
-dbt-core
-dbt-bigquery
-flake8
+google-cloud-bigquery

@@ -1,0 +1,3 @@
+# dbt_requirements.in
+
+dbt-bigquery~=1.7.0
