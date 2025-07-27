@@ -9,7 +9,6 @@ $maxFileSizeMB = 1000  # <-- MB limit of file. Reduce if overall file gets too b
 
 # 1. Directories to completely ignore (and anything inside them)
 $excludeDirs = @(
-    "*.git*",
     "*.venv*",
     "*__pycache__*",
     "*node_modules*",
