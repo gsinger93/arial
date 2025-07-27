@@ -13,8 +13,6 @@ def query_bigquery(query: str) -> pd.DataFrame | None:
     if not project_id:
         raise ValueError("GCP_PROJECT_ID environment variable not set.")
 
-    # By removing the try/except block, any error from client.query()
-    # will now be passed up to the function that called this one.
     client = bigquery.Client(project=project_id)
     print(f"Running query: {query}")
     query_job = client.query(query)
@@ -39,7 +37,7 @@ def load_df_to_bigquery(df: pd.DataFrame, dataset_id: str, table_id: str, write_
     
     job_config = bigquery.LoadJobConfig(
         create_disposition="CREATE_IF_NEEDED",
-        write_disposition=write_disposition,  # Use the provided write disposition
+        write_disposition=write_disposition,
         autodetect=True # Let BigQuery figure out the schema
     )
 
@@ -49,3 +47,20 @@ def load_df_to_bigquery(df: pd.DataFrame, dataset_id: str, table_id: str, write_
         print(f"✅ Successfully loaded {len(df)} rows to {table_ref} with method '{write_disposition}'.")
     except Exception as e:
         print(f"❌ Error loading data to BigQuery: {e}")
+
+def run_bq_dml(query: str):
+    """
+    Runs a DML (Data Manipulation Language) statement on BigQuery (e.g., UPDATE, INSERT).
+    """
+    project_id = os.getenv("GCP_PROJECT_ID")
+    if not project_id:
+        raise ValueError("GCP_PROJECT_ID environment variable not set.")
+
+    try:
+        client = bigquery.Client(project=project_id)
+        print(f"Running DML: {query}")
+        query_job = client.query(query)
+        query_job.result()
+        print("✅ DML statement completed successfully.")
+    except Exception as e:
+        print(f"❌ Error running DML statement: {e}")

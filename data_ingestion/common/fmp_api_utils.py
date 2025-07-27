@@ -8,12 +8,6 @@ from dotenv import load_dotenv
 def _make_fmp_request(endpoint: str) -> list | None:
     """
     Internal helper function to make a request to a specified FMP API endpoint.
-    
-    Args:
-        endpoint: The API endpoint path (e.g., 'quote/AAPL' or 'stock/list').
-
-    Returns:
-        A list of dictionaries containing the data, or None if an error occurs.
     """
     load_dotenv()
     api_key = os.getenv("FMP_API_KEY")
@@ -24,10 +18,10 @@ def _make_fmp_request(endpoint: str) -> list | None:
 
     base_url = "https://financialmodelingprep.com/api/v3/"
     url = f"{base_url}{endpoint}?apikey={api_key}"
-
+    
     try:
         response = requests.get(url, verify=ca_bundle)
-        response.raise_for_status()  # Raises an HTTPError for bad responses
+        response.raise_for_status()
         return response.json()
     except requests.exceptions.RequestException as e:
         print(f"Error fetching data from FMP API ({url}): {e}")
@@ -43,7 +37,6 @@ def get_historical_daily_prices(symbol: str) -> pd.DataFrame | None:
     Returns:
         A pandas DataFrame containing the historical data, or None if the request fails.
     """
-    # This endpoint gets all daily data for a symbol
     response_data = _make_fmp_request(f"historical-price-full/{symbol}")
     
     if response_data and 'historical' in response_data:
@@ -59,7 +52,6 @@ def get_historical_daily_prices(symbol: str) -> pd.DataFrame | None:
 def fetch_all_tradable_symbols() -> list | None:
     """
     Fetches a list of all tradable symbols from the FMP API.
-    (This is your renamed and refactored 'fetch_from_fmp' function).
     """
     data = _make_fmp_request("stock/list")
     if data:

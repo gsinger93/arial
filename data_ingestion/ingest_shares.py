@@ -5,29 +5,23 @@ import pandas as pd
 from dotenv import load_dotenv
 from datetime import datetime
 
-# Import our new and updated utility functions
 from data_ingestion.common.fmp_api_utils import get_historical_daily_prices
-from data_ingestion.common.gcp_utils import query_bigquery, load_df_to_bigquery
+from data_ingestion.common.gcp_utils import query_bigquery, load_df_to_bigquery, run_bq_dml
 
 def get_symbols_to_process(project_id: str, dataset_id: str, stock_table: str, symbol_table: str, limit: int) -> list:
     """
-    Queries BigQuery to get a prioritised list of symbols to ingest data for.
-    If the main stock_values table doesn't exist, it fetches from the master list.
+    Queries BigQuery to get a prioritised list of active symbols to ingest data for.
     """
-    # Try the complex query first, which assumes the stock_values table exists.
     prioritised_query = f"""
         WITH last_update AS (
-            SELECT
-                symbol,
-                MAX(ingest_dateTime) as last_ingested
+            SELECT symbol, MAX(ingest_dateTime) as last_ingested
             FROM `{project_id}.{dataset_id}.{stock_table}`
             GROUP BY symbol
         )
-        SELECT
-            m.symbol
+        SELECT m.symbol
         FROM `{project_id}.{dataset_id}.{symbol_table}` m
         LEFT JOIN last_update l ON m.symbol = l.symbol
-        WHERE m.symbol IS NOT NULL
+        WHERE m.symbol IS NOT NULL AND m.is_active = TRUE
         ORDER BY l.last_ingested ASC NULLS FIRST
         LIMIT {limit}
     """
@@ -36,15 +30,13 @@ def get_symbols_to_process(project_id: str, dataset_id: str, stock_table: str, s
         print("Attempting to fetch prioritised symbols...")
         symbols_df = query_bigquery(prioritised_query)
     except Exception as e:
-        # This will likely fail if the stock_values table doesn't exist.
         print(f"Could not run prioritised query (this is expected on first run): {e}")
         print("Falling back to fetch initial symbols from master table...")
         
-        # Fallback query: Just get the first symbols from the master list.
         fallback_query = f"""
             SELECT symbol
             FROM `{project_id}.{dataset_id}.{symbol_table}`
-            WHERE symbol IS NOT NULL
+            WHERE symbol IS NOT NULL AND is_active = TRUE
             LIMIT {limit}
         """
         symbols_df = query_bigquery(fallback_query)
@@ -65,7 +57,7 @@ def main():
     dataset_id = os.getenv("BIGQUERY_DATASET_ID", "financial_data_landing")
     stock_table_id = os.getenv("BIGQUERY_TABLE_ID", "stock_values")
     symbol_master_table_id = "symbol_master" # As per AC
-    process_limit = int(os.getenv("PROCESS_LIMIT", "1")) # Configurable limit from AC
+    process_limit = int(os.getenv("PROCESS_LIMIT", "100")) # Configurable limit from AC
 
     # --- 1. Get Prioritised Symbols ---
     print(f"Getting up to {process_limit} symbols to process...")
@@ -82,17 +74,25 @@ def main():
     for symbol in symbols:
         print(f"Fetching historical data for {symbol}...")
         historical_df = get_historical_daily_prices(symbol)
-        if historical_df is not None:
+        
+        if historical_df is not None and not historical_df.empty:
             all_historical_data.append(historical_df)
-
-    if not all_historical_data:
-        print("Could not fetch any historical data. Exiting.")
-        return
+        else:
+            print(f"Deactivating symbol {symbol} due to no data from API.")
+            deactivation_query = f"""
+                UPDATE `{project_id}.{dataset_id}.{symbol_master_table_id}`
+                SET is_active = FALSE
+                WHERE symbol = '{symbol}'
+            """
+            run_bq_dml(deactivation_query)
 
     # --- 3. Prepare and Load Data ---
+    if not all_historical_data:
+        print("No valid data was fetched for any symbols. Exiting.")
+        return
+    
     final_df = pd.concat(all_historical_data, ignore_index=True)
     
-    # Add ingestion timestamp
     final_df['ingest_dateTime'] = datetime.utcnow()
     
     # Rename for consistency with dbt models, if needed
@@ -100,7 +100,6 @@ def main():
 
     print(f"Total of {len(final_df)} historical records fetched.")
     
-    # Load data by appending to the table
     load_df_to_bigquery(
         df=final_df,
         dataset_id=dataset_id,
