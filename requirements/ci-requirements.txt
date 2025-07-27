@@ -316,7 +316,7 @@ urllib3==1.26.20
     # via
     #   dbt-core
     #   requests
-xgboost==3.0.2
+xgboost==1.7.5
     # via -r C:\Users\George.Singer\Documents\GitHub\Arial\requirements.in
 yarl==1.20.1
     # via aiohttp
