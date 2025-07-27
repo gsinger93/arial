@@ -1,6 +1,12 @@
 # requirements.in
 
+# General dependencies
 pandas
 python-dotenv
 requests
 google-cloud-bigquery
+
+# Added for model training
+scikit-learn
+xgboost
+gcsfs

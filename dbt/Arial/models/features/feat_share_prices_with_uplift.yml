@@ -1,0 +1,30 @@
+# in dbt/Arial/models/features/schema.yml
+
+version: 2
+
+models:
+  - name: feat_share_prices_with_uplift
+    description: "A feature model that calculates the 30-day future price uplift for stocks."
+    columns:
+      - name: ticker
+        description: "The stock symbol."
+        tests:
+          - not_null
+
+      - name: share_date
+        description: "The date of the stock price."
+        tests:
+          - not_null
+
+      - name: close_price
+        description: "The closing price of the stock."
+        tests:
+          - not_null
+
+      - name: target_uplift_pct_30_days
+        description: "The percentage uplift in price 30 days into the future."
+        # This can be null for the last 30 days of data, which is expected.
+        tests:
+          - is_within_reasonable_range:
+              min_value: -100
+              max_value: 1000
