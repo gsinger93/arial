@@ -1,0 +1,9 @@
+# requirements.in
+
+pandas
+python-dotenv
+google-cloud-bigquery
+requests
+dbt-core
+dbt-bigquery
+flake8
