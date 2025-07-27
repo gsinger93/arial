@@ -8,5 +8,5 @@ google-cloud-bigquery
 
 # Added for model training
 scikit-learn
-xgboost
+xgboost==1.7.5
 gcsfs
