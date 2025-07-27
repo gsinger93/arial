@@ -30,16 +30,16 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Authenticate to Google Cloud
-        uses: 'google-github-actions/auth@v2'
-        with:
-          workload_identity_provider: ${{ secrets.GCP_WIF_PROVIDER }}
-          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT_EMAIL }}
+      - name: Configure GCP Credentials
+        env:
+          GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
+        run: printf '%s' "$GCP_SA_KEY" > gcp-credentials.json
 
       - name: Run ingestion script
         env:
           FMP_API_KEY: ${{ secrets.FMP_API_KEY }}
           GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+          GOOGLE_APPLICATION_CREDENTIALS: gcp-credentials.json # <-- This line is missing
           BIGQUERY_DATASET_ID: 'financial_data_landing'
           PROCESS_LIMIT: '10' # As per the default in your acceptance criteria
         run: python -m data_ingestion.ingest_shares

@@ -1,0 +1,6 @@
+# requirements.in
+
+pandas
+python-dotenv
+requests
+google-cloud-bigquery

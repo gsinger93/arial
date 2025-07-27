@@ -21,10 +21,18 @@ def _make_fmp_request(endpoint: str) -> list | None:
     
     try:
         response = requests.get(url, verify=ca_bundle)
-        response.raise_for_status()
+        response.raise_for_status()  # This will raise an HTTPError for 4xx/5xx responses
         return response.json()
+    except requests.exceptions.HTTPError as http_err:
+        # Check if the error is specifically due to hitting the rate limit
+        if http_err.response.status_code == 429:
+            print("❌ API rate limit reached. Halting process.")
+            raise  # Re-raise the exception to stop the script
+        else:
+            print(f"An HTTP error occurred: {http_err}")
+            return None
     except requests.exceptions.RequestException as e:
-        print(f"Error fetching data from FMP API ({url}): {e}")
+        print(f"An unknown error occurred while fetching data from FMP API ({url}): {e}")
         return None
 
 def get_historical_daily_prices(symbol: str) -> pd.DataFrame | None:
