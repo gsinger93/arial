@@ -42,6 +42,8 @@ dbt-extractor==0.5.1
     # via dbt-core
 dbt-semantic-interfaces==0.4.4
     # via dbt-core
+flake8==7.3.0
+    # via -r C:\Users\George.Singer\Documents\GitHub\Arial\dbt_requirements.in
 google-api-core[grpc]==2.25.1
     # via
     #   dbt-bigquery
@@ -129,6 +131,8 @@ markupsafe==3.0.2
     # via jinja2
 mashumaro[msgpack]==3.14
     # via dbt-core
+mccabe==0.7.0
+    # via flake8
 minimal-snowplow-tracker==0.0.2
     # via dbt-core
 more-itertools==10.7.0
@@ -186,6 +190,8 @@ pyasn1==0.6.1
     #   rsa
 pyasn1-modules==0.4.2
     # via google-auth
+pycodestyle==2.14.0
+    # via flake8
 pycparser==2.22
     # via cffi
 pydantic==2.11.7
@@ -194,6 +200,8 @@ pydantic-core==2.33.2
     # via pydantic
 pydata-google-auth==1.9.1
     # via pandas-gbq
+pyflakes==3.4.0
+    # via flake8
 python-dateutil==2.9.0.post0
     # via
     #   dbt-semantic-interfaces
