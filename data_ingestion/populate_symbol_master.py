@@ -2,7 +2,7 @@
 
 import pandas as pd
 from dotenv import load_dotenv
-from common.api_utils import fetch_from_fmp
+from data_ingestion.common.fmp_api_utils import fetch_from_fmp
 from common.gcp_utils import load_df_to_bigquery
 
 load_dotenv()
