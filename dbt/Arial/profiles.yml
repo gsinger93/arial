@@ -7,6 +7,6 @@ Arial:
       project: "gs-arial"
       dataset: transformed
       threads: 4
-      keyfile: "{{ env_var('GCP_SA_KEYFILE_PATH', 'gcp-credentials.json') }}"
+      keyfile: "{{ env_var('DBT_SA_KEY', 'gcp-credentials.json') }}"
       timeout_seconds: 300
       priority: interactive
