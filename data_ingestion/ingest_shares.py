@@ -2,6 +2,7 @@
 
 import os
 import pandas as pd
+import requests
 from dotenv import load_dotenv
 from datetime import datetime
 
@@ -22,6 +23,7 @@ def get_symbols_to_process(project_id: str, dataset_id: str, stock_table: str, s
         FROM `{project_id}.{dataset_id}.{symbol_table}` m
         LEFT JOIN last_update l ON m.symbol = l.symbol
         WHERE m.symbol IS NOT NULL AND m.is_active = TRUE
+        and m.exchange in ('NYSE', 'NASDAQ', 'AMEX', 'OTC')
         ORDER BY l.last_ingested ASC NULLS FIRST
         LIMIT {limit}
     """
@@ -71,20 +73,27 @@ def main():
 
     # --- 2. Fetch Historical Data for all symbols ---
     all_historical_data = []
-    for symbol in symbols:
-        print(f"Fetching historical data for {symbol}...")
-        historical_df = get_historical_daily_prices(symbol)
-        
-        if historical_df is not None and not historical_df.empty:
-            all_historical_data.append(historical_df)
-        else:
-            print(f"Deactivating symbol {symbol} due to no data from API.")
-            deactivation_query = f"""
-                UPDATE `{project_id}.{dataset_id}.{symbol_master_table_id}`
-                SET is_active = FALSE
-                WHERE symbol = '{symbol}'
-            """
-            run_bq_dml(deactivation_query)
+    try:
+        for symbol in symbols:
+            print(f"Fetching historical data for {symbol}...")
+            historical_df = get_historical_daily_prices(symbol)
+            
+            if historical_df is not None and not historical_df.empty:
+                all_historical_data.append(historical_df)
+            else:
+                # This 'else' block will now only run for non-429 errors
+                print(f"Deactivating symbol {symbol} due to no data from API.")
+                deactivation_query = f"""
+                    UPDATE `{project_id}.{dataset_id}.{symbol_master_table_id}`
+                    SET is_active = FALSE
+                    WHERE symbol = '{symbol}'
+                """
+                run_bq_dml(deactivation_query)
+
+    except requests.exceptions.HTTPError:
+        # This catches the 429 error and breaks the loop.
+        # The script will then proceed with any data collected before the limit was hit.
+        print("Stopping ingestion loop due to API error.")
 
     # --- 3. Prepare and Load Data ---
     if not all_historical_data:
