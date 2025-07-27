@@ -1,0 +1,4 @@
+# ci-requirements.in
+
+-r requirements.in
+-r dbt_requirements.in
