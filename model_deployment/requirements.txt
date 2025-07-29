@@ -1,0 +1,6 @@
+numpy
+xgboost==1.7.5
+joblib
+fastapi
+uvicorn[standard] # Uvicorn is the web server for FastAPI
+pydantic # FastAPI uses Pydantic for data validation
