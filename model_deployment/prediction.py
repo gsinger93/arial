@@ -32,6 +32,11 @@ async def load_model():
     model = joblib.load(model_path)
     print(f"Model loaded successfully from {model_path}")
 
+@app.route('/health', methods=['GET'])
+def health_check():
+    """Health check endpoint."""
+    return Response(response="OK", status=200)
+
 @app.post("/predict")
 async def predict(input_data: PredictionInput):
     """Prediction endpoint for the XGBoost model."""
