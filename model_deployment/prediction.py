@@ -5,53 +5,52 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from typing import List
 
-# Define the input data model for robust validation
 class PredictionInput(BaseModel):
     instances: List[List[float]]
 
-# Initialize the FastAPI app
 app = FastAPI()
 
-# Use app.state to hold the model, the recommended FastAPI practice
 @app.on_event("startup")
 def load_model():
-    """Load the model at application startup."""
-    # This is the crucial change: We get the directory from Vertex AI...
+    """Load the model at application startup using the path provided by Vertex AI."""
+    # This is the standard path Vertex AI provides. There is no fallback.
     model_dir = os.getenv("AIP_STORAGE_URI")
     
-    if model_dir is None:
-        print("FATAL: AIP_STORAGE_URI environment variable not set. Cannot find model.")
+    if not model_dir:
+        # If this variable is not set, the deployment is fundamentally misconfigured.
+        print("FATAL: AIP_STORAGE_URI environment variable not found. Model cannot be loaded.")
         app.state.model = None
         return
 
-    # ...and then we join it with our specific model filename.
+    # Construct the full path to the model file
     model_path = os.path.join(model_dir, "baseline_xgboost_model.joblib")
+    print(f"Attempting to load model from: {model_path}")
     
     try:
         app.state.model = joblib.load(model_path)
-        print(f"Model loaded successfully from {model_path}")
+        print("Model loaded successfully.")
     except Exception as e:
-        print(f"FATAL: Error loading model from {model_path}: {e}")
+        print(f"FATAL: Failed to load model. Error: {e}")
         app.state.model = None
 
 @app.get("/health", status_code=200)
 def health_check():
-    """Endpoint for Vertex AI health checks."""
-    if app.state.model is not None:
+    """A robust health check that fails if the model is not loaded."""
+    if hasattr(app.state, 'model') and app.state.model is not None:
         return {"status": "healthy"}
     else:
-        # If the model failed to load, the service is unhealthy.
-        return {"status": "unhealthy"}, 500
+        # Return an error status code if the model isn't loaded.
+        # This will cause the deployment to fail clearly if there's a problem.
+        raise HTTPException(status_code=503, detail="Model not loaded")
 
 @app.post("/predict")
 def predict(input_data: PredictionInput):
     """Prediction endpoint."""
     if app.state.model is None:
         raise HTTPException(status_code=500, detail="Model is not loaded or failed to load on startup.")
-
     try:
         prediction_input = np.array(input_data.instances)
         predictions = app.state.model.predict(prediction_input)
         return {"predictions": predictions.tolist()}
     except Exception as e:
-        raise HTTPException(status_code=400, detail=f"Error during prediction: {str(e)}")
+        raise HTTPException(status_code=400, detail=f"Prediction error: {str(e)}")
