@@ -39,7 +39,7 @@ jobs:
         env:
           FMP_API_KEY: ${{ secrets.FMP_API_KEY }}
           GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
-          GOOGLE_APPLICATION_CREDENTIALS: gcp-credentials.json # <-- This line is missing
+          GOOGLE_APPLICATION_CREDENTIALS: gcp-credentials.json
           BIGQUERY_DATASET_ID: 'financial_data_landing'
-          PROCESS_LIMIT: '10' # As per the default in your acceptance criteria
+          PROCESS_LIMIT: '150'
         run: python -m data_ingestion.ingest_shares
